@@ -1,0 +1,20 @@
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe.config
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.pdb
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\TemplatingProject.Form1.resources
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\TemplatingProject.csproj.GenerateResource.cache
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\TemplatingProject.csproj.CoreCompileInputs.cache
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.exe
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.pdb
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\TemplatingProject.csprojAssemblyReference.cache
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe.config
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.pdb
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\TemplatingProject.csprojAssemblyReference.cache
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\TemplatingProject.Form1.resources
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\TemplatingProject.csproj.GenerateResource.cache
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\TemplatingProject.csproj.CoreCompileInputs.cache
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.exe
+C:\Users\tyler\Documents\Visual Studio 2017\Projects\Templating Project\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.pdb
