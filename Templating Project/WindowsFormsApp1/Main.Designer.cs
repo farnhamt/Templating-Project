@@ -19,19 +19,6 @@
             }
             base.Dispose(disposing);
         }
-
-        #region Windows Form Designer generated code
-
-
-        #endregion
-
-        private System.Windows.Forms.Button CivicEngagementButton;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button6;
-        private System.Windows.Forms.Label TemplateSelectTitle;
     }
 }
 

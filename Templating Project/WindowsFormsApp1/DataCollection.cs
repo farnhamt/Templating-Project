@@ -22,16 +22,20 @@ namespace TemplatingProject {
 		/// Returns true for success and false for failure.
 		/// </summary>
 		public bool ImportCSV() {
+			//Create a new topmost form to put the file dialog on to make sure it shows up in front of all other windows.
+			Form topmostForm = new Form { TopMost = true };
 			//Create a new file dialog filtered to only show CSV files
-			OpenFileDialog selectFile = new OpenFileDialog();
-			selectFile.Filter = "CSV Files (*.csv)|*.csv";
-			selectFile.AutoUpgradeEnabled = false;
+			OpenFileDialog selectFile = new OpenFileDialog {
+				Filter = "CSV Files (*.csv)|*.csv",
+				//Use legacy windows open file dialog because the new one crashes.
+				AutoUpgradeEnabled = false
+			};
 			DialogResult result = DialogResult.None;
 			try {
-				result = selectFile.ShowDialog();
+				result = selectFile.ShowDialog(topmostForm);
 			}
 			catch (Exception) {
-				MessageBox.Show("Error opening file selection window. Try restarting the program");
+				MessageBox.Show(new Form { TopMost = true }, "Error opening file selection window. Try restarting the program");
 				return false;
 			}
 			//If a file dialog was created and a file was selected successfully, proceed getting the data from that file.
@@ -48,12 +52,11 @@ namespace TemplatingProject {
 					return true;
 				}
 				catch (IOException) {
-					MessageBoxButtons errorBoxButtons = MessageBoxButtons.OK;
-					MessageBox.Show("Error: Cannot open CSV file while it is in use by another program", "File Access Error", errorBoxButtons);
+					MessageBox.Show(new Form { TopMost = true }, "Error: Cannot open CSV file while it is in use by another program", "File Access Error");
 					return false;
 				}
 				catch (Exception e) {
-					MessageBox.Show("Error: " + e.Message);
+					MessageBox.Show(new Form { TopMost = true }, "Error: " + e.Message);
 					return false;
 				}
 			}
@@ -62,9 +65,8 @@ namespace TemplatingProject {
 			}
 		}
 		#endregion
-	
-		#region assembleColumnValueCounters
-		public List<ColumnValueCounter> assembleColumnValueCounters() {
+		#region AssembleColumnValueCounters
+		public List<ColumnValueCounter> AssembleColumnValueCounters() {
 			//columnValueCounters stores a ColumnValueCounter for every column in the data table.
 			//This allows for storing the names and number of occurences of each unique data row value in relation to the column that it is a part of.
 			List<ColumnValueCounter> columnValueCounters = new List<ColumnValueCounter>();
@@ -74,12 +76,13 @@ namespace TemplatingProject {
 			//For each unique row value in the column, count the number of occurences of that value and store both the value and the count in the ColumnValueCounter UniqueRowValue attribute.
 			
 			for (int i = 0; i < _allData.Columns.Count; i++) {
-				ColumnValueCounter currentColumn = new ColumnValueCounter();
-				currentColumn.columnName = columnHeaders[i];
-				currentColumn.totalColumnValues = _allData.AsDataView().ToTable(false, columnHeaders[i]).Rows.Count;
+				ColumnValueCounter currentColumn = new ColumnValueCounter {
+					columnName = columnHeaders[i],
+					totalColumnValues = _allData.AsDataView().ToTable(false, columnHeaders[i]).Rows.Count
+				};
 				DataRowCollection uniqueRows = _allData.AsDataView().ToTable(true, columnHeaders[i]).Rows;
 				//for each unique row value in this column
-				UniqueRowValue unknownRowValue = new UniqueRowValue("Unknown", countUniqueRows(_allData, currentColumn.columnName, ""));
+				UniqueRowValue unknownRowValue = new UniqueRowValue("Unknown", CountUniqueRows(_allData, currentColumn.columnName, ""));
 				currentColumn.unknownCount = unknownRowValue.count;
 				for (int j = 0; j < uniqueRows.Count; j++) {
 					//Gets the name of the unique row value
@@ -87,11 +90,13 @@ namespace TemplatingProject {
 					//Exclude unique row values that we do not care about (the column header and any blank rows)
 
 					if (uniqueRowName != "" && uniqueRowName != currentColumn.columnName) {
-						currentColumn.uniqueRowValues.Add(new UniqueRowValue(uniqueRowName, countUniqueRows(_allData, currentColumn.columnName, uniqueRowName)));
+						currentColumn.uniqueRowValues.Add(new UniqueRowValue(uniqueRowName, CountUniqueRows(_allData, currentColumn.columnName, uniqueRowName)));
 					}
 					
 				}
+				//Get abbreviated string representation of the current column (i.e. AA or AF)
 				currentColumn.abbreviatedRepresentation = GetExcelColumnName(i);
+				//Sorts the row values alphabetically within the current column object.
 				currentColumn.uniqueRowValues.Sort((x, y) => x.name.CompareTo(y.name));
 				//store that entire column
 				columnValueCounters.Add(currentColumn);
@@ -99,7 +104,6 @@ namespace TemplatingProject {
 			return columnValueCounters;
 		}
 		#endregion
-		
 		#region Fill Data Table
 		/// <summary>
 		/// Gets the column headers and other information about each column and inserts them into a data table
@@ -143,8 +147,9 @@ namespace TemplatingProject {
 				}
 				//For each column of data add a column to the data table.
 				foreach (string header in _columnHeaders) {
+					//Check for duplicate column entries
 					if (dt.Columns.Contains(header)) {
-						MessageBox.Show("Warning: Multiple identical column names detected in CSV input");
+						MessageBox.Show(new Form { TopMost = true }, "Warning: Multiple identical column names detected in CSV input");
 						dt.Columns.Add(header + "copy");
 					}
 					else
@@ -182,6 +187,10 @@ namespace TemplatingProject {
 		}
 		#endregion
 		#region Utility Functions
+		/// <summary>
+		/// Gets the string representation of an excel column identifier from the column number.
+		/// Column number is an ineger where 0 indexes the first column.
+		/// </summary>
 		private string GetExcelColumnName(int columnNumber) {
 			int dividend = columnNumber + 1;
 			string columnName = String.Empty;
@@ -195,14 +204,16 @@ namespace TemplatingProject {
 
 			return columnName;
 		}
-
-		public static int countUniqueRows(DataTable allData, string columnName, string uniqueRowName) {
+		/// <summary>
+		/// Returns the number of unique row values that have a specified name in a column that is specified by name.
+		/// </summary>
+		private int CountUniqueRows(DataTable allData, string columnName, string uniqueRowName) {
 			string filterExpression = "[" + columnName + "]" + " = '" + uniqueRowName + "\'";
 			return allData.Select(filterExpression).Length;
 		}
 		#endregion
 	}
-
+	#region Data Classes
 	/// <summary>
 	/// An object that stores a the name and number of occurences of a particular value in a column.
 	/// </summary>
@@ -225,4 +236,5 @@ namespace TemplatingProject {
 		public string abbreviatedRepresentation;
 		public ColumnValueCounter() => uniqueRowValues = new List<UniqueRowValue>();
 	}
+	#endregion
 }

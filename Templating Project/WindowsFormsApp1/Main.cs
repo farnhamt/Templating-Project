@@ -18,10 +18,10 @@ namespace TemplatingProject {
 				System.Environment.Exit(1);
 			}
 
-			List<ColumnValueCounter> columnValueCounters = _dataCollector.assembleColumnValueCounters();
+			List<ColumnValueCounter> columnValueCounters = _dataCollector.AssembleColumnValueCounters();
 			_documentManipulator.ProcessDocument(wordApp, columnValueCounters);
 			
-			MessageBox.Show("done");
+			MessageBox.Show(new Form { TopMost = true }, "Template Processing Completed Successfully");
 			System.Environment.Exit(0);
 		}
 		#region OpenTemplate
@@ -29,19 +29,21 @@ namespace TemplatingProject {
 		/// Prompts the user to select the word document that they want to use as a template and then creates a new Word.Application by opening that file.
 		/// </summary>
 		private Word.Application OpenTemplate() {
-			OpenFileDialog selectFile = new OpenFileDialog();
-			selectFile.Filter = "Word 2007 Documents (*.docx)|*.docx| Word 97-2003 Documents (*.doc)|*.doc";
-			selectFile.AutoUpgradeEnabled = false;
-			if (selectFile.ShowDialog() == DialogResult.OK) {
+			//Create a new topmost form to put the openFileDialog on to make sure it shows up in front of all other windows.
+			Form topmostForm = new Form { TopMost = true };
+			OpenFileDialog selectFile = new OpenFileDialog {
+				Filter = "Word 2007 Documents (*.docx)|*.docx| Word 97-2003 Documents (*.doc)|*.doc",
+				AutoUpgradeEnabled = false
+			};
+			if (selectFile.ShowDialog(topmostForm) == DialogResult.OK) {
 				return _documentManipulator.OpenDocument(selectFile.FileName);
 			}
 			else {
-				MessageBox.Show("Error: Failed to open word document");
+				MessageBox.Show(new Form { TopMost = true }, "Error: Failed to open word document");
 				System.Environment.Exit(1);
 				return null;
 			}
 		}
 		#endregion
 	}
-
 }
