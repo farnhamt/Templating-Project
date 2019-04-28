@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Data;
-using Word = Microsoft.Office.Interop.Word;
-using Charting = System.Windows.Forms.DataVisualization.Charting;
-using Chart = System.Windows.Forms.DataVisualization.Charting.Chart;
-using Series = System.Windows.Forms.DataVisualization.Charting.Series;
-using Color = System.Drawing.Color;
 namespace TemplatingProject {
 	public class DataCollection {
 		#region ClassWideVariables
@@ -175,8 +168,24 @@ namespace TemplatingProject {
 					dr = dt.NewRow();
 					//place all of the data in the current CSV row into our data table row one element at a time.
 					for (int i = 0; i < _columnHeaders.Count; i++) {
+						if (rows[i].Length > 0) {
+							//Check to see if the row had commas in it that would make the intended row value get split up into multiple row values.
+							if (rows[i][0] == '\"') {
+								//Remove the quote at the beginning of the first row value
+								rows[i] = rows[i].Remove(0, 1);
+								int j = i + 1;
+								//Loop through following row values, combining them with the original one as we go
+								for (; !rows[j].Contains("\""); j++) {
+									rows[i] += ("," + rows[j]);
+									rows[j] = "COMMAFIX";
+								}
+								//Remove the quote from the last piece of the row value
+								rows[i] += ("," + rows[j].Remove(rows[j].Length - 1, 1));
+								rows[j] = "COMMAFIX";
+							}
+						}
 						//Make sure that we are not getting any of the dummy data entries.
-						if (rows[i] != "Response" && rows[i] != "Open-Ended Response") {
+						if (rows[i] != "Response" && rows[i] != "Open-Ended Response" && rows[i] != "COMMAFIX") {
 							dr[i] = rows[i];
 						}
 					}

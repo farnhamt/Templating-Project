@@ -7,6 +7,7 @@ using Charting = System.Windows.Forms.DataVisualization.Charting;
 using Chart = System.Windows.Forms.DataVisualization.Charting.Chart;
 using Series = System.Windows.Forms.DataVisualization.Charting.Series;
 using Color = System.Drawing.Color;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace TemplatingProject {
 	class DocumentCommandExecuter {
@@ -96,7 +97,7 @@ namespace TemplatingProject {
 			ApplyCustomChartOptions(chart, options, columnValueCounters);
 
 			try {
-				chart.SaveImage(filename, Charting.ChartImageFormat.Png);
+				chart.SaveImage(filename, ChartImageFormat.Png);
 			}
 			catch (Exception) {
 				MessageBox.Show(new Form { TopMost = true }, "Error: Failed to save graph image");
@@ -108,7 +109,7 @@ namespace TemplatingProject {
 		private string GeneratePieChart(List<ColumnValueCounter> columnValueCounters, string filename, DocumentManipulation.TextReplacementOptions options) {
 
 			Chart chart = new Chart();
-			List<Charting.Series> allSeries = new List<Charting.Series>();
+			List<Series> allSeries = new List<Series>();
 			
 			if (columnValueCounters.Count == 0) {
 				MessageBox.Show(new Form { TopMost = true }, "Error: No data imported. Invalid CSV data format");
@@ -175,7 +176,7 @@ namespace TemplatingProject {
 			ApplyCustomChartOptions(chart, options, columnValueCounters);
 
 			try {
-				chart.SaveImage(filename, Charting.ChartImageFormat.Png);
+				chart.SaveImage(filename, ChartImageFormat.Png);
 			}
 			catch (Exception) {
 				MessageBox.Show(new Form { TopMost = true }, "Error: Failed to create graph image");
@@ -190,7 +191,7 @@ namespace TemplatingProject {
 		/// Configures all style settings for an individual bar chart data series.
 		/// </summary>
 		private void FinalizeBarChartSeries(Chart chart, Series series, List<ColumnValueCounter> columnValueCounters, Color color) {
-			series.ChartType = Charting.SeriesChartType.Column;
+			series.ChartType = SeriesChartType.Column;
 			series["PieLabelStyle"] = "Outside";
 			series.Color = color;
 			series.IsVisibleInLegend = true;
@@ -200,7 +201,7 @@ namespace TemplatingProject {
 			series.Font = new System.Drawing.Font("Calibri", 16);
 			series.IsValueShownAsLabel = true;
 			series.SmartLabelStyle.Enabled = false;
-			series.SmartLabelStyle.AllowOutsidePlotArea = Charting.LabelOutsidePlotAreaStyle.Partial;
+			series.SmartLabelStyle.AllowOutsidePlotArea = LabelOutsidePlotAreaStyle.Partial;
 			//When we are plotting more than one column at a time, there will be filler series' in between each data series.
 			//Increase the width of the columns to account for the decreased width that gets automatically applied to them because of this.
 			if (columnValueCounters.Count > 1) {
@@ -217,11 +218,11 @@ namespace TemplatingProject {
 		/// Configures all style settings for an individual pie chart data series.
 		/// </summary>
 		private void FinalizePieChartSeries(Chart chart, Series series, List<ColumnValueCounter> columnValueCounters) {
-			series.ChartType = Charting.SeriesChartType.Pie;
+			series.ChartType = SeriesChartType.Pie;
 			//Sort points by largest y value (percentage or count) to avoid the pie chart slices appearing in random order
 			//Simple bubble sort (gaurunteed small set size)
 			for (int i = 0; i < series.Points.Count; i++) {
-				Charting.DataPoint temp = new Charting.DataPoint();
+				DataPoint temp = new DataPoint();
 				for (int j = i; j < series.Points.Count; j++) {
 					if (series.Points[j].YValues[0] > series.Points[i].YValues[0]) {
 						temp = series.Points[i];
@@ -273,15 +274,15 @@ namespace TemplatingProject {
 			chart.Series.Add(filler);
 		}
 		#endregion
-		#region applyCustomChartOptions
+		#region ApplyCustomChartOptions
 		/// <summary>
 		/// Applies stylistic configuration to the given chart based on the TextReplacementOptions that are passed in.
 		/// </summary>
 		private void ApplyCustomChartOptions(Chart chart, DocumentManipulation.TextReplacementOptions options, List<ColumnValueCounter> columnValueCounters) {
 			//Initialize chart area and axis
-			Charting.ChartArea chartArea = new Charting.ChartArea("main");
-			Charting.Axis yAxis = new Charting.Axis(chartArea, Charting.AxisName.Y);
-			Charting.Axis xAxis = new Charting.Axis(chartArea, Charting.AxisName.X);
+			ChartArea chartArea = new ChartArea("main");
+			Axis yAxis = new Axis(chartArea, AxisName.Y);
+			Axis xAxis = new Axis(chartArea, AxisName.X);
 			chart.ChartAreas.Add(chartArea);
 			//Configure Y-Axis Style
 			chart.ChartAreas["main"].AxisY.MajorTickMark.Enabled = false;
@@ -296,7 +297,7 @@ namespace TemplatingProject {
 				chart.ChartAreas["main"].AxisY.MajorGrid.Interval = 10;
 				chart.ChartAreas["main"].AxisY.Interval = 10;
 			}
-			chart.ChartAreas["main"].AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+			chart.ChartAreas["main"].AxisY.MajorGrid.LineColor = Color.LightGray;
 			chart.ChartAreas["main"].AxisY.LineWidth = 0;
 			//Configure Y-Axis label style
 			chart.ChartAreas["main"].AxisY.LabelAutoFitMinFontSize = 16;
@@ -318,29 +319,35 @@ namespace TemplatingProject {
 			chart.ChartAreas["main"].AxisX.LabelAutoFitMinFontSize = 16;
 			chart.ChartAreas["main"].AxisX.LabelStyle.ForeColor = Color.Black;
 			//Configure chart border style
-			chart.BorderlineDashStyle = Charting.ChartDashStyle.Solid;
-			chart.BorderlineColor = System.Drawing.Color.LightGray;
+			chart.BorderlineDashStyle = ChartDashStyle.Solid;
+			chart.BorderlineColor = Color.LightGray;
 			chart.BorderlineWidth = 1;
 			//Ensure chart antialiasing is off
-			chart.AntiAliasing = Charting.AntiAliasingStyles.None;
+			chart.AntiAliasing = AntiAliasingStyles.None;
 			//Configure graph legend
-			Charting.Legend legend = new Charting.Legend {
+			Legend legend = new Legend {
 				Font = new System.Drawing.Font("Calibri", 16),
 				IsTextAutoFit = false,
 				Alignment = System.Drawing.StringAlignment.Center,
-				LegendStyle = Charting.LegendStyle.Row
+				LegendStyle = LegendStyle.Row
 			};
 			if (columnValueCounters.Count > 1) {
-				legend.Docking = Charting.Docking.Bottom;
+				legend.Docking = Docking.Bottom;
 				chart.Legends.Add(legend);
 			}
 			if (options.graphType == "pie") {
-				legend.LegendStyle = Charting.LegendStyle.Table;
+				legend.LegendStyle = LegendStyle.Table;
+				legend.Docking = Docking.Right;
+				legend.Font = new System.Drawing.Font("Calibri", 16);
 				legend.IsEquallySpacedItems = true;
+				legend.TableStyle = LegendTableStyle.Wide;
+				//legend.MaximumAutoSize = 100;
+				//legend.AutoFitMinFontSize = 32;
+				//legend.IsTextAutoFit = true;
 				chart.Legends.Add(legend);
 			}
 			//Configure graph title
-			Charting.Title title = new Charting.Title {
+			Title title = new Title {
 				Text = options.graphTitle,
 				Font = new System.Drawing.Font("Calibri", 24, System.Drawing.FontStyle.Italic),
 				ForeColor = Color.Gray
@@ -351,8 +358,8 @@ namespace TemplatingProject {
 				//Set the font size of the data labels that reside inside of the pie chart
 				chart.Series[0].Font = new System.Drawing.Font("Calibri", 16);
 				chart.BorderlineWidth = 0;
-				chart.Width = 560;
-				chart.Height = 420;
+				chart.Width = 720;
+				chart.Height = 560;
 			}
 			//Configure bar chart with multiple data columns specific settings
 			else if (columnValueCounters.Count > 1) {
