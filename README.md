@@ -1,10 +1,8 @@
 Documentation for Word Document Templater Application:
 
 PURPOSE:
-The purpose of this application is to allow the generation of word document reports quickly based on CSV file input and a
-word document template file. It was created for the 4-H program at Oregon State University to save time when executing the
-task of creating reports from data that their program collects via Qualtrics surveys. The project allows for the creation of
-future templates by the user using a simple word document command syntax that is defined below.
+The purpose of this application is to enable the user to quickly generate word document reports that are based on CSV data files 
+and word document templates as input. It was created for the 4-H program at Oregon State University to save time when repetitively creating reports from data that their department collects via Qualtrics surveys. The project allows for the user to create their own templates in the future using a simple word document command syntax that is defined below.
 
 
 TO USE THIS PROGRAM:
