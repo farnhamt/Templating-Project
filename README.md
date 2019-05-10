@@ -8,6 +8,7 @@ future templates by the user using a simple word document command syntax that is
 
 
 TO USE THIS PROGRAM:
+
 0. Making a backup of all files involved is recommended. If the program is interrupted abruptly it may overwrite file data.
 1. Create a word document template using the instructions below on writing template commands.
 2. Create a CSV file as input that follows the appropriate format (qualtrics output format).
