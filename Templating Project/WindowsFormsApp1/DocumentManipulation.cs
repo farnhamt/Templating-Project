@@ -5,9 +5,20 @@ using System.IO;
 using Word = Microsoft.Office.Interop.Word;
 
 namespace TemplatingProject {
+	/// <summary>
+	/// This class handles all interactions with word documents. It contains functions for finding and replacing text in a word document with either different text or an image,
+	/// finding and parsing commands that are given by the user within the word document, and uses a DocumentCommandExecuter to execute the parsed commands.
+	/// </summary>
 	public class DocumentManipulation {
-		/// <summary>Color pallette that is used on the graphs. Set by default, by can be changed by a user document command
+		#region Class Wide Variables
+		/// <summary>Color pallette that is used on the graphs. Set by default, by can be changed by a user document command</summary>
 		public System.Drawing.Color[] ColorPalette = {System.Drawing.Color.FromArgb(215, 63, 9), System.Drawing.Color.FromArgb(170, 157, 46), System.Drawing.Color.FromArgb(183, 169, 154)};
+		/// <summary>
+		/// List of strings that represent unique row value names. The order of the strings in this list is the order of their corresponding graph columns and legend entries.
+		/// For example, if this list stores ['Yes', 'No'], each graph will place the 'Yes' row at the first index of the graph and the 'No' row at the second index of the graph if the graph is using these row values.
+		/// </summary>
+		private List<string> _graphColumnOrder;
+		#endregion
 		#region OpenDocument
 		/// <summary>
 		/// Creates a new Word.Application from the document that was selected by the user
@@ -32,7 +43,15 @@ namespace TemplatingProject {
 		private void ReplaceTextWithText(string textToReplace, string replacementText, Word.Application wordApp) {
 			object replaceAll = Word.WdReplace.wdReplaceAll;
 			Word.Find findObject = wordApp.Selection.Find;
-			findObject.Execute(textToReplace, true, true, false, false, false, false, Word.WdFindWrap.wdFindAsk, false, replacementText, replaceAll, false, false, false, false);
+			try {
+				//Attempt to find and replace the given text to replace with the given replacement text in one command.
+				findObject.Execute(textToReplace, true, true, false, false, false, false, Word.WdFindWrap.wdFindAsk, false, replacementText, replaceAll, false, false, false, false);
+			}
+			catch (Exception e) {
+				MessageBox.Show(new Form { TopMost = true }, e.Message + "at command: " + textToReplace);
+				wordApp.Quit();
+				Environment.Exit(1);
+			}
 		}
 		/// <summary>
 		/// Finds and replaces a string of text with an image specified at the given image file path
@@ -41,6 +60,7 @@ namespace TemplatingProject {
 			Word.Selection sel = wordApp.Selection;
 			string keyword = rawCommand;
 			try {
+				//Attempt to find the text that will be replaced.
 				sel.Find.Execute(keyword, Replace: Word.WdReplace.wdReplaceOne);
 			}
 			catch(Exception) {
@@ -52,8 +72,11 @@ namespace TemplatingProject {
 				wordApp.Quit();
 				Environment.Exit(1);
 			}
+			//Select the text that was found.
 			sel.Range.Select();
+			//Get the full file path of the given image.
 			var imagePath1 = Path.GetFullPath(string.Format(imagePath, keyword));
+			//Replace the text with the image at the given path.
 			sel.InlineShapes.AddPicture(imagePath, false, true);
 		}
 		#endregion
@@ -87,7 +110,8 @@ namespace TemplatingProject {
 		#region GetTextReplacementOptions
 		/// <summary>
 		/// Parses the command given by the user in the word document template, 
-		/// and compiles it into a single TextReplacementOptions object that can be more easily analyzed later
+		/// and compiles it into a single TextReplacementOptions struct that can be more easily analyzed later
+		/// The TextReplacementOptions struct defines exactly how the data from the CSV file will be interpretted and processed.
 		/// </summary>
 		public TextReplacementOptions GetTextReplacementOptions(string rawText) {
 			TextReplacementOptions textReplacementOptions = new TextReplacementOptions { rawInput = rawText };
@@ -102,27 +126,31 @@ namespace TemplatingProject {
 				outputOption1 = options[1].ToLower();
 			}
 			catch (Exception) {
-				MessageBox.Show(new Form { TopMost = true }, "Error in word document input at:\n" + rawText);
-				textReplacementOptions.hasFailed = true;
-				return textReplacementOptions;
+				throw new Exception("Error in word document input at:\n" + rawText);
 			}
 			//If the command is a declaration of the color pallette then parse the command as such and generate a color pallette as an array of rgb colors.
 			if (outputType.Contains("colors") || outputType.Contains("colorpalette")) {
-				System.Drawing.Color[] colorPallete = new System.Drawing.Color[options.Length - 1];
-				for (int i = 0; i < options.Length - 1; i++) {
-					string[] rgb = options[i + 1].Split(',');
-					//Assemble an array of 3 integers that represents an RGB color
-					int[] rgbInts = new int[3];
-					for (int j = 0; j < rgb.Length; j++) {
-						rgbInts[j] = Convert.ToInt32(rgb[j].Trim(' ', '}'));
-					}
-					colorPallete[i] = System.Drawing.Color.FromArgb(rgbInts[0], rgbInts[1], rgbInts[2]);
-				}
-				this.ColorPalette = colorPallete;
+				//Parse the color pallette out of the collor pallette command and set the classwide color pallette to the new one.
+				ParseAndSetColorPallette(options);
 				//Set a flag to tell the rest of the program that this command was just a color pallette declaration
 				textReplacementOptions.isColors = true;
 				return textReplacementOptions;
 			}
+			//Proccess the command as an 'order' command which specifies the order in which the columns and legend entries will shop up in on the graph.
+			//The position of the columns and legend entries are identical to the position of the items in this 'order' list.
+			if (outputType.Contains("order")) {
+				List<string> order = new List<string>();
+				//Iterate through the list of items in the command and add them to order List.
+				for (int i = 1; i < options.Length; i++) {
+					order.Add(options[i].Trim(' ', '}'));
+				}
+				textReplacementOptions.order = order;
+				//Set a flag that tells the rest of the program that this was just an order command. 
+				//Keeps the rest of the program from attempting to process the command as a text or image replacement.
+				textReplacementOptions.isOrder = true;
+				return textReplacementOptions;
+			}
+
 			//Check to see whether this command asks for a bar graph, pie chart, or a simple text replacement
 			if (outputType.Contains("bar")) {
 				textReplacementOptions.isGraph = true;
@@ -182,12 +210,36 @@ namespace TemplatingProject {
 			return textReplacementOptions;
 		}
 		#endregion
+		#region ParseAndSetColorPallette
+		/// <summary>
+		/// Iterates through each color entry in a given color pallette command and converts them to a color object array that can be easily used for application during graphing.
+		/// </summary>
+		private void ParseAndSetColorPallette(string[] options) {
+			System.Drawing.Color[] colorPallete = new System.Drawing.Color[options.Length - 1];
+			for (int i = 0; i < options.Length - 1; i++) {
+				string[] rgb = options[i + 1].Split(',');
+				//Assemble an array of 3 integers that represents an RGB color
+				int[] rgbInts = new int[3];
+				for (int j = 0; j < rgb.Length; j++) {
+					rgbInts[j] = Convert.ToInt32(rgb[j].Trim(' ', '}'));
+				}
+				try {
+					colorPallete[i] = System.Drawing.Color.FromArgb(rgbInts[0], rgbInts[1], rgbInts[2]);
+				}
+				catch (Exception e) {
+					throw new Exception("Error: Invalid color in color pallette.\n" + e.Message);
+				}
+			}
+			ColorPalette = colorPallete;
+		}
+		#endregion
 		#region GetCommand
 		/// <summary>
 		/// Gets the next sequential command from the template word document and returns that command as a string.
+		/// Commands are processed from the beginning of the word document to the end, so this function searches for the first occurence of a command.
 		/// </summary>
 		private string GetCommand(Word.Application wordApp) {
-			//Initialize the Find object for finding the command.
+			//Initialize the Find object for finding a command.
 			Word.Find findObject = wordApp.Selection.Find;
 			findObject.ClearFormatting();
 			findObject.Replacement.ClearFormatting();
@@ -228,15 +280,28 @@ namespace TemplatingProject {
 		private void ProcessDocumentCommand(string rawCommand, Word.Application wordApp, List<ColumnValueCounter> columnValueCounters) {
 			//Remove any extraneous braces
 			string command = rawCommand.Trim('{', '}');
+			TextReplacementOptions processedCommand = new TextReplacementOptions();
 			//Parse the raw command to get a textReplacementOptions object that stores more usable command options.
-			TextReplacementOptions processedCommand = GetTextReplacementOptions(command);
-			//A list of the columns that we actually use for this command.
-			DocumentCommandExecuter commandExecuter = new DocumentCommandExecuter(ColorPalette);
+			try {
+				processedCommand = GetTextReplacementOptions(command);
+			}
+			catch (Exception e) {
+				MessageBox.Show(new Form { TopMost = true }, "Error: " + e.Message);
+				wordApp.Quit();
+				Environment.Exit(1);
+			}
 			//if the command was a declaration of the color pallette used in the document, just remove the text and do not execute anything.
 			if (processedCommand.isColors) {
 				ReplaceTextWithText(rawCommand, "", wordApp);
 				return;
 			}
+			else if (processedCommand.isOrder) {
+				_graphColumnOrder = processedCommand.order;
+				ReplaceTextWithText(rawCommand, "", wordApp);
+				return;
+			}
+			//A list of the columns that we actually use for this command.
+			DocumentCommandExecuter commandExecuter = new DocumentCommandExecuter(ColorPalette, _graphColumnOrder);
 			//Populate a list of columnValueCounters that pertain to the columns that we are actually using for this command.
 			List <ColumnValueCounter> usedColumns = GetUsedColumns(processedCommand, columnValueCounters);
 			//Ensure that all columns in the list of used columns have the same number of unique row values
@@ -244,15 +309,21 @@ namespace TemplatingProject {
 			if (processedCommand.hasFailed) {
 				MessageBox.Show(new Form { TopMost = true }, "Command Failed: Check template command syntax");
 				wordApp.Quit();
+				Environment.Exit(1);
+			}
+			if (usedColumns.Count == 0) {
+				MessageBox.Show(new Form { TopMost = true }, "No columns found in CSV file for command:\n" + processedCommand.rawInput);
+				wordApp.Quit();
+				Environment.Exit(1);
 			}
 			//Process the command as a graph
 			if (processedCommand.isGraph) {
-				string replaceWith = commandExecuter.GenerateGraph(usedColumns, Application.StartupPath + "\\tempGraph.PNG", processedCommand);
+				string replaceWith = commandExecuter.GenerateGraph(usedColumns, Application.StartupPath + "\\tempGraph.PNG", processedCommand, wordApp);
 				ReplaceTextWithImage(rawCommand, replaceWith, wordApp);
 			}
 			//Process the command as text replacement
 			else if (processedCommand.isText) {
-				string replaceWith = commandExecuter.GenerateText(usedColumns, rawCommand, processedCommand, wordApp);
+				string replaceWith = commandExecuter.GenerateText(usedColumns, processedCommand);
 				ReplaceTextWithText(rawCommand, replaceWith, wordApp);
 			}
 			else {
@@ -300,14 +371,15 @@ namespace TemplatingProject {
 		#region NormalizeColumns
 		/// <summary>
 		/// Ensures that each column in the list of columnValueCounters has the same 
-		/// amount of unique row values to the columns can be graphed.
+		/// amount of unique row values as each other data column being graphed.
 		/// If there is a column that does not have any occurence of one of the unique 
 		/// row values that shows up in one of the other columns then it is created in that column with a count of zero.
 		/// </summary>
 		/// <param name="usedColumns">List of ColumnValueCounters to normalize</param>
 		public void NormalizeColumns(List<ColumnValueCounter> usedColumns) {
 			int uniqueRowValueCount = 0;
-			//Get the column that has the most unique row values to compare the other columns against
+			//Get the column that has the most unique row values to compare the other columns against.
+			//The column with the most unique row values is treated as the optimal column that we will try to match the others to.
 			ColumnValueCounter maxColumn = new ColumnValueCounter();
 			foreach (ColumnValueCounter column in usedColumns) {
 				if (column.uniqueRowValues.Count > uniqueRowValueCount) {
@@ -316,17 +388,17 @@ namespace TemplatingProject {
 				}
 			}
 			if (usedColumns.Count > 1) {
-				//For each column value counter
+				//For each used data column
 				for (int i = 0; i < usedColumns.Count; i++) {
 					ColumnValueCounter currentColumn = usedColumns[i];
 					//If the number of unique row values of the current column is less than any of the others
 					if (currentColumn.uniqueRowValues.Count < uniqueRowValueCount) {
-						//for each intended unique row value
+						//scan through each row value that is in the collumn with the most unique row values
 						for (int j = 0; j < maxColumn.uniqueRowValues.Count; j++) {
-							//for each unique row value in the column with missing unique row values
+							//scan through each row value in the column with missing unique row values
 							for (int k = 0; k < maxColumn.uniqueRowValues.Count; k++) {
 								//check to see if the unique row value that we are currently looking at from the list 
-								//of intended unique row values is also in the column with the list of unique row values that is missing some;
+								//of intended unique row values is also in the column with the list of unique row values that is missing a row value.
 								if (currentColumn.uniqueRowValues[k].name == maxColumn.uniqueRowValues[j].name) {
 									break;
 								}
@@ -362,6 +434,8 @@ namespace TemplatingProject {
 		public struct TextReplacementOptions {
 			/// <summary>Determines whether a command is declaring a color pallette for the document or not.
 			public bool isColors;
+			/// <summary>Determines whether a command is declaring the order in which values should appear in a graph.</summary>
+			public bool isOrder;
 			//set of descriptive booleans that determine how the data will be presented.
 			public bool isGraph;
 			public bool isText;
@@ -370,17 +444,18 @@ namespace TemplatingProject {
 			public bool isMean;
 			public bool isRange;
 			public bool isColumnValue;
-			/// <summary>Set when a command fails to be parsed into one of these objects
+			/// <summary>Set when a command fails to be parsed into one of these objects </summary>
 			public bool hasFailed;
-			/// <summary>x-axis label font size
+			/// <summary>x-axis label font size </summary>
 			public int fontSize;
 			public string graphType;
 			public string graphTitle;
 			public string rawInput;
+			public List<string> order;
 			public List<string> columnNames;
+			/// <summary>Stores a color pallette found in a color command. Not set if command is not a color pallette</summary>
 			public System.Drawing.Color[] colorPalette;
 		}
 		#endregion
 	}
-
 }

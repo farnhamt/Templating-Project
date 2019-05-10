@@ -4,6 +4,10 @@ using System.Windows.Forms;
 using System.IO;
 using System.Data;
 namespace TemplatingProject {
+	/// <summary>
+	/// This class handles the collection and agregation of all data. This class supports importing a CSV file of the appropriate format, assembling the data into more usable objects (ColumnValueCounters),
+	/// and associating those columns with their respective excel column tags.
+	/// </summary>
 	public class DataCollection {
 		#region ClassWideVariables
 		private static DataTable _allData;
@@ -222,11 +226,11 @@ namespace TemplatingProject {
 		}
 		#endregion
 	}
-	#region Data Classes
+	#region Data Containers
 	/// <summary>
 	/// An object that stores a the name and number of occurences of a particular value in a column.
 	/// </summary>
-	public class UniqueRowValue {
+	public struct UniqueRowValue {
 		public string name;
 		public int count;
 		public UniqueRowValue(string name, int count) {
